@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "tier": 1,
+  "description": "pith foundation: pith-mp4 (zero-dep Rust)",
+  "homepage": "https://github.com/pith-hash/pith-mp4",
+  "topics": [
+    "rust",
+    "mp4",
+    "iso-bmff",
+    "demuxer",
+    "no-standard-library"
+  ]
+}
