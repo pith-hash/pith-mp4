@@ -1,0 +1,396 @@
+{
+  "generator": "gen-reference",
+  "format": 1,
+  "vectors": [
+    {
+      "name": "minimal-4-samples",
+      "file_sha256": "53c629c9250c83cf21df9e10c4af328ecc6cf4ba0ae7570830ab48401b8a204b",
+      "file_len": 748,
+      "major_brand": "isom",
+      "compatible_brands": [
+        "isom",
+        "avc1",
+        "mp42"
+      ],
+      "timescale": 1000,
+      "duration": 2000,
+      "tracks": [
+        {
+          "id": 1,
+          "timescale": 90000,
+          "duration": 180000,
+          "language": "eng",
+          "handler": "vide",
+          "width": 640,
+          "height": 360,
+          "sample_count": 4,
+          "samples": [
+            {
+              "offset": 732,
+              "size": 3,
+              "decoding": 0,
+              "presentation": 0,
+              "duration": 45000,
+              "keyframe": true
+            },
+            {
+              "offset": 735,
+              "size": 5,
+              "decoding": 45000,
+              "presentation": 90000,
+              "duration": 45000,
+              "keyframe": false
+            },
+            {
+              "offset": 740,
+              "size": 3,
+              "decoding": 90000,
+              "presentation": 45000,
+              "duration": 45000,
+              "keyframe": true
+            },
+            {
+              "offset": 743,
+              "size": 5,
+              "decoding": 135000,
+              "presentation": 135000,
+              "duration": 45000,
+              "keyframe": false
+            }
+          ],
+          "stsd_entries": [
+            {
+              "kind": "Visual",
+              "coding": "avc1",
+              "width": 640,
+              "height": 360,
+              "avcc_hex": "0142001effe100046742001e01000368ce06",
+              "esds_hex": null
+            }
+          ],
+          "avcc_hex": "0142001effe100046742001e01000368ce06"
+        }
+      ]
+    },
+    {
+      "name": "co64-variant",
+      "file_sha256": "e0822e137bac1035c1ab381b39ebe1a3aa32902ccef82cfb5fc2f867adfcbff8",
+      "file_len": 756,
+      "major_brand": "isom",
+      "compatible_brands": [
+        "isom",
+        "avc1",
+        "mp42"
+      ],
+      "timescale": 1000,
+      "duration": 2000,
+      "tracks": [
+        {
+          "id": 1,
+          "timescale": 90000,
+          "duration": 180000,
+          "language": "eng",
+          "handler": "vide",
+          "width": 640,
+          "height": 360,
+          "sample_count": 4,
+          "samples": [
+            {
+              "offset": 740,
+              "size": 3,
+              "decoding": 0,
+              "presentation": 0,
+              "duration": 45000,
+              "keyframe": true
+            },
+            {
+              "offset": 743,
+              "size": 5,
+              "decoding": 45000,
+              "presentation": 90000,
+              "duration": 45000,
+              "keyframe": false
+            },
+            {
+              "offset": 748,
+              "size": 3,
+              "decoding": 90000,
+              "presentation": 45000,
+              "duration": 45000,
+              "keyframe": true
+            },
+            {
+              "offset": 751,
+              "size": 5,
+              "decoding": 135000,
+              "presentation": 135000,
+              "duration": 45000,
+              "keyframe": false
+            }
+          ],
+          "stsd_entries": [
+            {
+              "kind": "Visual",
+              "coding": "avc1",
+              "width": 640,
+              "height": 360,
+              "avcc_hex": "0142001effe100046742001e01000368ce06",
+              "esds_hex": null
+            }
+          ],
+          "avcc_hex": "0142001effe100046742001e01000368ce06"
+        }
+      ]
+    },
+    {
+      "name": "largesize-and-size0",
+      "file_sha256": "a87e3ad1b6e793863543053beb7bb1dc05e54821dad98f29c710d00966cf3c65",
+      "file_len": 766,
+      "major_brand": "isom",
+      "compatible_brands": [
+        "isom",
+        "avc1",
+        "mp42"
+      ],
+      "timescale": 1000,
+      "duration": 2000,
+      "tracks": [
+        {
+          "id": 1,
+          "timescale": 90000,
+          "duration": 180000,
+          "language": "eng",
+          "handler": "vide",
+          "width": 640,
+          "height": 360,
+          "sample_count": 4,
+          "samples": [
+            {
+              "offset": 750,
+              "size": 3,
+              "decoding": 0,
+              "presentation": 0,
+              "duration": 45000,
+              "keyframe": true
+            },
+            {
+              "offset": 753,
+              "size": 5,
+              "decoding": 45000,
+              "presentation": 90000,
+              "duration": 45000,
+              "keyframe": false
+            },
+            {
+              "offset": 758,
+              "size": 3,
+              "decoding": 90000,
+              "presentation": 45000,
+              "duration": 45000,
+              "keyframe": true
+            },
+            {
+              "offset": 761,
+              "size": 5,
+              "decoding": 135000,
+              "presentation": 135000,
+              "duration": 45000,
+              "keyframe": false
+            }
+          ],
+          "stsd_entries": [
+            {
+              "kind": "Visual",
+              "coding": "avc1",
+              "width": 640,
+              "height": 360,
+              "avcc_hex": "0142001effe100046742001e01000368ce06",
+              "esds_hex": null
+            }
+          ],
+          "avcc_hex": "0142001effe100046742001e01000368ce06"
+        }
+      ]
+    },
+    {
+      "name": "stsc-multi-run",
+      "file_sha256": "2128bbd474d6afd48a59fbb08524be23b231725acce0a1d65d028ef5ef6533ad",
+      "file_len": 860,
+      "major_brand": "isom",
+      "compatible_brands": [
+        "isom",
+        "avc1",
+        "mp42"
+      ],
+      "timescale": 1000,
+      "duration": 2000,
+      "tracks": [
+        {
+          "id": 1,
+          "timescale": 90000,
+          "duration": 450000,
+          "language": "eng",
+          "handler": "vide",
+          "width": 640,
+          "height": 360,
+          "sample_count": 10,
+          "samples": [
+            {
+              "offset": 820,
+              "size": 4,
+              "decoding": 0,
+              "presentation": 0,
+              "duration": 45000,
+              "keyframe": true
+            },
+            {
+              "offset": 824,
+              "size": 4,
+              "decoding": 45000,
+              "presentation": 90000,
+              "duration": 45000,
+              "keyframe": false
+            },
+            {
+              "offset": 828,
+              "size": 4,
+              "decoding": 90000,
+              "presentation": 45000,
+              "duration": 45000,
+              "keyframe": false
+            },
+            {
+              "offset": 832,
+              "size": 4,
+              "decoding": 135000,
+              "presentation": 135000,
+              "duration": 45000,
+              "keyframe": false
+            },
+            {
+              "offset": 836,
+              "size": 4,
+              "decoding": 180000,
+              "presentation": 180000,
+              "duration": 45000,
+              "keyframe": false
+            },
+            {
+              "offset": 840,
+              "size": 4,
+              "decoding": 225000,
+              "presentation": 225000,
+              "duration": 45000,
+              "keyframe": false
+            },
+            {
+              "offset": 844,
+              "size": 4,
+              "decoding": 270000,
+              "presentation": 270000,
+              "duration": 45000,
+              "keyframe": false
+            },
+            {
+              "offset": 848,
+              "size": 4,
+              "decoding": 315000,
+              "presentation": 315000,
+              "duration": 45000,
+              "keyframe": false
+            },
+            {
+              "offset": 852,
+              "size": 4,
+              "decoding": 360000,
+              "presentation": 360000,
+              "duration": 45000,
+              "keyframe": false
+            },
+            {
+              "offset": 856,
+              "size": 4,
+              "decoding": 405000,
+              "presentation": 405000,
+              "duration": 45000,
+              "keyframe": false
+            }
+          ],
+          "stsd_entries": [
+            {
+              "kind": "Visual",
+              "coding": "avc1",
+              "width": 640,
+              "height": 360,
+              "avcc_hex": "0142001effe100046742001e01000368ce06",
+              "esds_hex": null
+            }
+          ],
+          "avcc_hex": "0142001effe100046742001e01000368ce06"
+        }
+      ]
+    }
+  ],
+  "errors": [
+    {
+      "name": "no-ftyp",
+      "file_sha256": "720747c853f95d0a2b78d91c65739998a0e5f4929abefc2073e6dff91ae62acf",
+      "file_len": 720,
+      "error": "InvalidMagic"
+    },
+    {
+      "name": "foreign-brands-only",
+      "file_sha256": "7b076e7242de9f5fc2e606aa3be10aced77da1b73189843c40ced0ab5dcbfd11",
+      "file_len": 740,
+      "error": "InvalidMagic"
+    },
+    {
+      "name": "fragmented-moof",
+      "file_sha256": "ed2804a378f6b169fa00b6912215d44ddc1054f41fc21bda287e5ac0b483919a",
+      "file_len": 756,
+      "error": "Unsupported"
+    },
+    {
+      "name": "truncated-prefixes-all",
+      "total_prefixes": 748,
+      "ok_count": 0,
+      "variant_counts": {
+        "BadValue": 1,
+        "InvalidMagic": 1,
+        "Truncated": 746
+      },
+      "runs": [
+        {
+          "prefix_len": 0,
+          "error": "InvalidMagic"
+        },
+        {
+          "prefix_len": 1,
+          "error": "Truncated"
+        },
+        {
+          "prefix_len": 28,
+          "error": "BadValue"
+        },
+        {
+          "prefix_len": 29,
+          "error": "Truncated"
+        }
+      ]
+    }
+  ],
+  "fuzz": {
+    "name": "splitmix64-mutation-campaign",
+    "seed_hex": "0xdead_beef",
+    "iterations": 20000,
+    "ok_count": 2040,
+    "outcome_counts": {
+      "BadValue": 1182,
+      "InvalidMagic": 276,
+      "Truncated": 16427,
+      "Unsupported": 75,
+      "ok": 2040
+    },
+    "outcome_digest": "abfb3e4cd3559430"
+  }
+}
