@@ -8,6 +8,14 @@
 //! SplitMix64 mutation campaign. `gen-reference` (no args) rewrites the
 //! file; `gen-reference verify` regenerates in memory and compares
 //! byte-for-byte against the committed copy — CI runs the verify mode.
+//!
+//! `gen-reference fixtures` writes the input files the vectors describe
+//! to `tests/fixtures/<name>.mp4` (four success fixtures, three error
+//! inputs), so the language SDKs can replay the vectors against real
+//! bytes. The committed copies are self-verifying: every vector pins
+//! its input's `file_sha256`, and a unit test below re-derives the
+//! builder output and compares it byte-for-byte against what is
+//! committed.
 
 use std::process::ExitCode;
 
@@ -990,6 +998,104 @@ pub(crate) enum Mode {
     Generate,
     /// Regenerate in memory and byte-compare against the committed file.
     Verify,
+    /// Write the vector input files to `tests/fixtures/*.mp4`.
+    Fixtures,
+}
+
+/// The directory the fixture files are written to, relative to the
+/// crate root.
+pub(crate) fn fixtures_dir() -> std::path::PathBuf {
+    std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures")
+}
+
+/// Every fixture file the reference vectors describe, as
+/// `(file name, bytes)`, in a stable order: the four success fixtures
+/// in vector order, then the three error inputs.
+pub(crate) fn fixture_files() -> Vec<(&'static str, Vec<u8>)> {
+    let minimal = build_file(
+        false,
+        false,
+        false,
+        16,
+        &[3, 5, 3, 5],
+        &[(1, 2, 1)],
+        Some(&[1, 3]),
+    );
+    let ftyp_len = ftyp().len();
+    let no_ftyp = minimal[ftyp_len..].to_vec();
+    let mut weird = Vec::new();
+    weird.extend_from_slice(b"xxxx");
+    weird.extend_from_slice(&u32(0));
+    weird.extend_from_slice(b"yyyy");
+    let mut foreign = bx(b"ftyp", &weird);
+    foreign.extend_from_slice(&minimal[ftyp_len..]);
+    let mut fragmented = minimal.clone();
+    fragmented.extend_from_slice(&bx(b"moof", &[]));
+    vec![
+        (
+            "minimal-4-samples",
+            build_file(
+                false,
+                false,
+                false,
+                16,
+                &[3, 5, 3, 5],
+                &[(1, 2, 1)],
+                Some(&[1, 3]),
+            ),
+        ),
+        (
+            "co64-variant",
+            build_file(
+                true,
+                false,
+                false,
+                16,
+                &[3, 5, 3, 5],
+                &[(1, 2, 1)],
+                Some(&[1, 3]),
+            ),
+        ),
+        (
+            "largesize-and-size0",
+            build_file(
+                false,
+                true,
+                true,
+                8,
+                &[3, 5, 3, 5],
+                &[(1, 2, 1)],
+                Some(&[1, 3]),
+            ),
+        ),
+        (
+            "stsc-multi-run",
+            build_file(
+                false,
+                false,
+                false,
+                0,
+                &[4; 10],
+                &[(1, 3, 1), (3, 1, 1), (4, 2, 1)],
+                Some(&[1]),
+            ),
+        ),
+        ("no-ftyp", no_ftyp),
+        ("foreign-brands-only", foreign),
+        ("fragmented-moof", fragmented),
+    ]
+}
+
+/// Writes every fixture file into [`fixtures_dir`], creating the
+/// directory as needed.
+pub(crate) fn write_fixtures(dir: &std::path::Path) -> Result<usize, String> {
+    std::fs::create_dir_all(dir).map_err(|e| format!("create_dir_all {}: {e}", dir.display()))?;
+    let files = fixture_files();
+    for (name, bytes) in &files {
+        let path = dir.join(format!("{name}.mp4"));
+        std::fs::write(&path, bytes).map_err(|e| format!("write {}: {e}", path.display()))?;
+    }
+    Ok(files.len())
 }
 
 pub(crate) fn run(path: &std::path::Path, mode: Mode) -> Result<(), String> {
@@ -1008,15 +1114,25 @@ pub(crate) fn run(path: &std::path::Path, mode: Mode) -> Result<(), String> {
             println!("reference.json is current");
             Ok(())
         }
+        Mode::Fixtures => {
+            let dir = fixtures_dir();
+            let n = write_fixtures(&dir)?;
+            println!("wrote {n} fixture files under {}", dir.display());
+            Ok(())
+        }
     }
 }
 
-/// CLI parsing: no argument generates, `verify` verifies.
+/// CLI parsing: no argument generates, `verify` verifies, `fixtures`
+/// writes the vector input files.
 pub(crate) fn parse_args(mut args: impl Iterator<Item = String>) -> Result<Mode, String> {
     match args.next().as_deref() {
         None => Ok(Mode::Generate),
         Some("verify") => Ok(Mode::Verify),
-        Some(other) => Err(format!("usage: gen-reference [verify] (got `{other}`)")),
+        Some("fixtures") => Ok(Mode::Fixtures),
+        Some(other) => Err(format!(
+            "usage: gen-reference [verify|fixtures] (got `{other}`)"
+        )),
     }
 }
 

@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pith-mp4"
+version = "0.1.0"
+description = "ISO-BMFF demuxing SDK: ftyp/moov sample tables, stts/stsc/stsz/stco/co64/stss and stsd sample entries via the pith-mp4 Rust cdylib (ctypes, zero-dep)"
+license = "MIT"
+requires-python = ">=3.9"
+keywords = ["flac", "audio", "decoder", "pcm", "hashing"]
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Rust",
+  "Topic :: Multimedia :: Sound/Audio",
+]
+
+[project.urls]
+Repository = "https://github.com/pith-hash/pith-mp4"
+Homepage = "https://github.com/pith-hash/pith-mp4"
+
+[tool.setuptools]
+packages = ["pith_mp4"]
+
+[tool.setuptools.package-data]
+pith_mp4 = ["*.dll", "*.dylib", "*.so"]

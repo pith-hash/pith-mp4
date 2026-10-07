@@ -62,3 +62,9 @@ docs/superpowers/
 
 
 /target
+
+# Language SDK build artifacts
+sdk/python/build/
+*.egg-info/
+sdk/node/node_modules/
+sdk/python/.pytest_cache/

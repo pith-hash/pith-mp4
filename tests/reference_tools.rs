@@ -12,9 +12,9 @@ use std::process::Command;
 
 use tool::{
     J, Mode, avcc_payload, below, build_file, bx, chunk_offsets, concat_samples, demux_vector,
-    dinf, error_variant, four_json, ftyp, full, hdlr, mdat, mdhd, minf, moov, mvhd, outcome_code,
-    parse_args, reference_json, run, stco, stsc, stsd_avc1, stss, stsz, stts, three_json, tkhd,
-    u16, u32, u64, verify_against, vmhd,
+    dinf, error_variant, fixture_files, four_json, ftyp, full, hdlr, mdat, mdhd, minf, moov, mvhd,
+    outcome_code, parse_args, reference_json, run, stco, stsc, stsd_avc1, stss, stsz, stts,
+    three_json, tkhd, u16, u32, u64, verify_against, vmhd, write_fixtures,
 };
 
 // ------------------------------------------------------------ tool surface
@@ -131,8 +131,47 @@ fn parse_args_modes() {
     assert!(matches!(parse_args(none), Ok(Mode::Generate)));
     let verify = ["verify".to_string()].into_iter();
     assert!(matches!(parse_args(verify), Ok(Mode::Verify)));
+    let fixtures = ["fixtures".to_string()].into_iter();
+    assert!(matches!(parse_args(fixtures), Ok(Mode::Fixtures)));
     let junk = ["bogus".to_string()].into_iter();
     assert!(parse_args(junk).is_err());
+}
+
+#[test]
+fn committed_fixtures_match_the_builders() {
+    // The fixture files the SDKs replay are exactly what the tool's
+    // builders produce today; a builder change must re-emit them (and
+    // every vector pins its input's sha256, so drift fails loudly).
+    let mut checked = 0;
+    for (name, bytes) in fixture_files() {
+        let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("tests/fixtures")
+            .join(format!("{name}.mp4"));
+        let committed =
+            std::fs::read(&path).unwrap_or_else(|e| panic!("read {}: {e}", path.display()));
+        assert_eq!(committed, bytes, "{name}");
+        checked += 1;
+    }
+    assert_eq!(checked, 7);
+}
+
+#[test]
+fn fixtures_mode_writes_and_matches() {
+    let dir = std::env::temp_dir().join(format!(
+        "pith-mp4-fix-{}-{}",
+        std::process::id(),
+        std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap()
+            .as_nanos()
+    ));
+    let n = write_fixtures(&dir).expect("fixtures must write");
+    assert_eq!(n, 7);
+    for (name, bytes) in fixture_files() {
+        let written = std::fs::read(dir.join(format!("{name}.mp4"))).expect("fixture file");
+        assert_eq!(written, bytes, "{name}");
+    }
+    std::fs::remove_dir_all(&dir).ok();
 }
 
 #[test]
