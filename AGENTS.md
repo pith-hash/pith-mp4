@@ -4,7 +4,7 @@
 
 - Repo: `pith-hash/pith-mp4`
 - Description: pith foundation: pith-mp4 (zero-dep Rust)
-- License: Apache-2.0
+- License: MIT
 
 ## Build & Test
 
