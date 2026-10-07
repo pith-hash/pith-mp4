@@ -1152,3 +1152,303 @@ pub(crate) fn main() -> ExitCode {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use pith_digest::SplitMix64;
+
+    #[test]
+    fn json_serializer_covers_every_arm() {
+        // Str: every escape branch, including control characters.
+        let s = J::obj(vec![("x", J::s("a\"b\\c\nd\re\tf\u{1}g"))]);
+        assert_eq!(
+            s.to_json(),
+            "{\n  \"x\": \"a\\\"b\\\\c\\nd\\re\\tf\\u0001g\"\n}\n"
+        );
+        // Bool / Null / Int.
+        assert_eq!(J::Bool(true).to_json(), "true\n");
+        assert_eq!(J::Null.to_json(), "null\n");
+        assert_eq!(J::Int(-7).to_json(), "-7\n");
+        // Hex and opt-hex.
+        assert_eq!(J::hex(&[0x0a, 0xff]).to_json(), "\"0aff\"\n");
+        assert_eq!(J::opt_hex(None).to_json(), "null\n");
+        assert_eq!(J::opt_hex(Some(&[0x01])).to_json(), "\"01\"\n");
+        // Arr and Obj, empty and populated.
+        assert_eq!(J::Arr(vec![]).to_json(), "[]\n");
+        assert_eq!(J::Obj(vec![]).to_json(), "{}\n");
+        let nested = J::obj(vec![("list", J::Arr(vec![J::Int(1), J::Int(2)]))]);
+        assert!(nested.to_json().contains("\"list\": [\n    1,\n    2\n  ]"));
+    }
+
+    #[test]
+    fn fourcc_and_threecc_and_below() {
+        assert_eq!(four_json(b"avc1").to_json(), "\"avc1\"\n");
+        assert_eq!(three_json(b"eng").to_json(), "\"eng\"\n");
+        let mut rng = SplitMix64::new(9);
+        assert_eq!(below(&mut rng, 0), 0);
+        for _ in 0..32 {
+            assert!(below(&mut rng, 5) < 5);
+        }
+    }
+
+    #[test]
+    fn box_helpers_render_known_bytes() {
+        // `bx` sizes the payload; `full` adds version/flags; the scalar
+        // encoders are big-endian.
+        assert_eq!(&bx(b"free", &[])[..8], [0, 0, 0, 8, b'f', b'r', b'e', b'e']);
+        assert_eq!(u16(1), [0, 1]);
+        assert_eq!(u32(1), [0, 0, 0, 1]);
+        assert_eq!(u64(1), [0, 0, 0, 0, 0, 0, 0, 1]);
+        let f = full(b"stsd", 0, 0, &u32(0));
+        assert_eq!(&f[4..8], b"stsd");
+    }
+
+    #[test]
+    fn error_variant_and_outcome_code_map_every_variant() {
+        let cases: [(Error, &str, u8); 5] = [
+            (
+                Error::Truncated {
+                    what: "x",
+                    needed: 1,
+                    found: 0,
+                },
+                "Truncated",
+                1,
+            ),
+            (Error::InvalidMagic { what: "x" }, "InvalidMagic", 2),
+            (Error::BadValue("x"), "BadValue", 3),
+            (Error::Unsupported("x"), "Unsupported", 4),
+            (
+                Error::TooLarge {
+                    what: "x",
+                    limit: 1,
+                },
+                "TooLarge",
+                5,
+            ),
+        ];
+        for (e, name, code) in cases {
+            assert_eq!(error_variant(&e), name);
+            assert_eq!(outcome_code(&e), code);
+        }
+    }
+
+    #[test]
+    fn error_vector_records_the_variant() {
+        let v = error_vector("empty-input", &[]);
+        let json = v.to_json();
+        assert!(json.contains("\"error\": \"InvalidMagic\""), "{json}");
+        let truncated = error_vector("short-input", b"no");
+        assert!(
+            truncated.to_json().contains("\"error\": \"Truncated\""),
+            "{}",
+            truncated.to_json()
+        );
+    }
+
+    #[test]
+    fn truncated_prefixes_vector_covers_every_length() {
+        let files = fixture_files();
+        let minimal = &files
+            .iter()
+            .find(|(n, _)| *n == "minimal-4-samples")
+            .unwrap()
+            .1;
+        let v = truncated_prefixes_vector(minimal);
+        let json = v.to_json();
+        assert!(json.contains("\"total_prefixes\": 748"), "{json}");
+    }
+
+    #[test]
+    fn fuzz_vector_is_deterministic() {
+        let files = fixture_files();
+        let minimal = &files
+            .iter()
+            .find(|(n, _)| *n == "minimal-4-samples")
+            .unwrap()
+            .1;
+        let a = fuzz_vector(minimal);
+        let b = fuzz_vector(minimal);
+        assert_eq!(a.to_json(), b.to_json());
+        assert!(a.to_json().contains("\"iterations\""));
+    }
+
+    #[test]
+    fn fixture_files_are_seven_distinct_nonempty_inputs() {
+        let files = fixture_files();
+        assert_eq!(files.len(), 7);
+        let mut names: Vec<_> = files.iter().map(|(n, _)| *n).collect();
+        names.sort_unstable();
+        let mut sorted = names.clone();
+        sorted.dedup();
+        assert_eq!(names, sorted);
+        for (name, bytes) in &files {
+            assert!(!bytes.is_empty(), "{name}");
+            // The three error fixtures refuse; the four success fixtures
+            // demux.
+            if *name == "no-ftyp" || *name == "foreign-brands-only" || *name == "fragmented-moof" {
+                assert!(demux(bytes).is_err(), "{name}");
+            } else {
+                assert!(demux(bytes).is_ok(), "{name}");
+            }
+        }
+    }
+
+    #[test]
+    fn write_fixtures_roundtrips_through_a_tempdir() {
+        let dir = std::env::temp_dir().join(format!(
+            "pith-mp4-bin-fix-{}-{}",
+            std::process::id(),
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
+        ));
+        assert_eq!(write_fixtures(&dir).unwrap(), 7);
+        for (name, bytes) in fixture_files() {
+            assert_eq!(
+                std::fs::read(dir.join(format!("{name}.mp4"))).unwrap(),
+                bytes,
+                "{name}"
+            );
+        }
+        std::fs::remove_dir_all(&dir).ok();
+    }
+
+    #[test]
+    fn run_all_three_modes_roundtrip() {
+        let path = std::env::temp_dir().join(format!(
+            "pith-mp4-bin-run-{}-{}.json",
+            std::process::id(),
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
+        ));
+        run(&path, Mode::Generate).expect("generate");
+        assert_eq!(std::fs::read_to_string(&path).unwrap(), reference_json());
+        run(&path, Mode::Verify).expect("verify own output");
+        std::fs::write(&path, "stale").unwrap();
+        assert!(run(&path, Mode::Verify).is_err());
+        let dir = std::env::temp_dir();
+        assert!(run(&dir, Mode::Generate).is_err());
+        assert!(run(&dir, Mode::Verify).is_err());
+        // Fixtures mode ignores the path and writes next to the crate.
+        run(&path, Mode::Fixtures).expect("fixtures");
+        std::fs::remove_file(&path).ok();
+    }
+
+    #[test]
+    fn parse_args_covers_every_mode() {
+        assert!(matches!(
+            parse_args(Vec::<String>::new().into_iter()),
+            Ok(Mode::Generate)
+        ));
+        assert!(matches!(
+            parse_args(["verify".to_string()].into_iter()),
+            Ok(Mode::Verify)
+        ));
+        assert!(matches!(
+            parse_args(["fixtures".to_string()].into_iter()),
+            Ok(Mode::Fixtures)
+        ));
+        assert!(parse_args(["bogus".to_string()].into_iter()).is_err());
+    }
+
+    #[test]
+    fn demux_vector_panics_on_non_file_input() {
+        let result = std::panic::catch_unwind(|| demux_vector("not-an-mp4", &[1, 2, 3]));
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn vectors_serialize_audio_other_and_null_language() {
+        // A minimal `mp4a` audio entry and a bare `Other` entry, driven
+        // through `demux_vector` so the Audio/Other serialization arms
+        // and the language fallback all execute.
+        fn sample_entry(coding: &[u8; 4], body: &[u8]) -> Vec<u8> {
+            let mut entry = Vec::new();
+            entry.extend_from_slice(&[0; 6]); // reserved
+            entry.extend_from_slice(&u16(1)); // data_reference_index
+            entry.extend_from_slice(&[0; 8]); // reserved[2]
+            entry.extend_from_slice(body);
+            let mut with_header = Vec::new();
+            with_header.extend_from_slice(&u32(entry.len() as u32 + 8));
+            with_header.extend_from_slice(coding);
+            with_header.extend_from_slice(&entry);
+            with_header
+        }
+        let audio = sample_entry(b"mp4a", &{
+            let mut b = Vec::new();
+            b.extend_from_slice(&u16(2)); // channels
+            b.extend_from_slice(&u16(16)); // sample size
+            b.extend_from_slice(&u16(0));
+            b.extend_from_slice(&u16(0));
+            b.extend_from_slice(&u32(44_100 << 16));
+            b
+        });
+        let other = {
+            let mut with_header = Vec::new();
+            with_header.extend_from_slice(&u32(8));
+            with_header.extend_from_slice(b"smpl");
+            with_header
+        };
+        let mut stsd_body = u32(2).to_vec();
+        stsd_body.extend_from_slice(&audio);
+        stsd_body.extend_from_slice(&other);
+        // The stco offset has to name the real mdat payload, so build
+        // once to measure the fixed-width moov, then again with the
+        // true offset (same byte width both times).
+        let sizes = [3u32, 5, 3, 5];
+        let payload = concat_samples(&sizes);
+        let build = |mdat_payload_offset: u64| {
+            let stbl_body = {
+                let mut b = Vec::new();
+                b.extend_from_slice(&full(b"stsd", 0, 0, &stsd_body));
+                b.extend_from_slice(&stts(&[(4, 1)]));
+                b.extend_from_slice(&stsc(&[(1, 4, 1)]));
+                b.extend_from_slice(&stsz(&sizes));
+                b.extend_from_slice(&stco(&[mdat_payload_offset]));
+                bx(b"stbl", &b)
+            };
+            let mdia_body = {
+                let mut b = Vec::new();
+                b.extend_from_slice(&mdhd(90_000, 180_000));
+                b.extend_from_slice(&hdlr(b"soun"));
+                b.extend_from_slice(&bx(b"minf", &stbl_body));
+                b
+            };
+            let mut f = ftyp();
+            f.extend(bx(
+                b"moov",
+                &[
+                    mvhd(),
+                    bx(b"trak", &{
+                        let mut b = Vec::new();
+                        b.extend_from_slice(&tkhd(1, 0, 0));
+                        b.extend_from_slice(&bx(b"mdia", &mdia_body));
+                        b
+                    }),
+                ]
+                .concat(),
+            ));
+            f.extend(mdat(&payload));
+            f
+        };
+        // Rebuild using the measured layout: mdat payload starts right
+        // after ftyp + moov + the 8-byte mdat header.
+        let probe = build(0);
+        let ftyp_len = ftyp().len();
+        let moov_len = {
+            // moov ends where mdat begins: file_len - payload - 8.
+            probe.len() - payload.len() - 8 - ftyp_len
+        };
+        let file = build((ftyp_len + moov_len + 8) as u64);
+        let json = demux_vector("mixed-entries", &file).to_json();
+        assert!(json.contains("\"Audio\""), "{json}");
+        assert!(json.contains("\"Other\""), "{json}");
+        assert!(json.contains("\"channels\": 2"), "{json}");
+        assert!(json.contains("\"rate\": 44100"), "{json}");
+    }
+}
