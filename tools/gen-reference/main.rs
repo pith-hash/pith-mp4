@@ -7,7 +7,7 @@
 //! every malformed input produces, and an aggregate over a deterministic
 //! SplitMix64 mutation campaign. `gen-reference` (no args) rewrites the
 //! file; `gen-reference verify` regenerates in memory and compares
-//! byte-for-byte against the committed copy — CI runs the verify mode.
+//! byte-for-byte against the committed copy â€” CI runs the verify mode.
 //!
 //! `gen-reference fixtures` writes the input files the vectors describe
 //! to `tests/fixtures/<name>.mp4` (four success fixtures, three error
@@ -148,7 +148,7 @@ impl J {
 }
 
 // ------------------------------------------------- fixture builders (mirror
-// of tests/demux.rs — keep byte-identical)
+// of tests/demux.rs â€” keep byte-identical)
 
 /// `size:u32, four, payload`.
 pub(crate) fn bx(four: &[u8; 4], payload: &[u8]) -> Vec<u8> {
@@ -212,7 +212,7 @@ pub(crate) fn mvhd() -> Vec<u8> {
     full(b"mvhd", 0, 0, &p)
 }
 
-/// `tkhd` v0 for track `id`, `w`×`h` display size, duration 2000.
+/// `tkhd` v0 for track `id`, `w`Ã—`h` display size, duration 2000.
 pub(crate) fn tkhd(id: u32, w: u16, h: u16) -> Vec<u8> {
     let mut p = Vec::new();
     p.extend_from_slice(&u32(0)); // creation
@@ -274,7 +274,7 @@ pub(crate) fn avcc_payload() -> Vec<u8> {
     p
 }
 
-/// `stsd` with one `avc1` visual sample entry (`w`×`h`) carrying `avcC`.
+/// `stsd` with one `avc1` visual sample entry (`w`Ã—`h`) carrying `avcC`.
 pub(crate) fn stsd_avc1(w: u16, h: u16) -> Vec<u8> {
     let mut entry = Vec::new();
     entry.extend_from_slice(&[0; 6]); // reserved
@@ -391,7 +391,7 @@ pub(crate) fn vmhd() -> Vec<u8> {
 }
 
 /// Composition offsets for the minimal file: sample 1 is shown one period
-/// late, sample 2 one period early — the classic one-B-frame reorder.
+/// late, sample 2 one period early â€” the classic one-B-frame reorder.
 pub(crate) fn ctts_offsets(n: u32) -> Vec<i32> {
     let mut v = vec![0i32; n as usize];
     if n >= 3 {
@@ -492,7 +492,7 @@ pub(crate) fn mdat_to_eof(payload: &[u8]) -> Vec<u8> {
 }
 
 /// Assembles the fixture: `ftyp`, optional `free` largesize box, `moov`
-/// (built twice — once to measure, once with real chunk offsets), then
+/// (built twice â€” once to measure, once with real chunk offsets), then
 /// `mdat`. `gap_bytes` are leading padding *inside* `mdat`'s payload so
 /// chunk offsets are nontrivial, and `size0_mdat` switches `mdat` to the
 /// to-end-of-file encoding. `sync = None` omits `stss`.
@@ -968,7 +968,7 @@ pub(crate) fn reference_json() -> String {
 }
 
 /// Reference file path: `<manifest>/reference.json` (repo root, the suite's
-/// canonical location — matches pith-digest and pith-unicode).
+/// canonical location â€” matches pith-digest and pith-unicode).
 pub(crate) fn reference_path() -> std::path::PathBuf {
     std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("reference.json")
 }
@@ -1128,6 +1128,7 @@ pub(crate) fn run(path: &std::path::Path, mode: Mode) -> Result<(), String> {
 pub(crate) fn parse_args(mut args: impl Iterator<Item = String>) -> Result<Mode, String> {
     match args.next().as_deref() {
         None => Ok(Mode::Generate),
+        Some("gen") | Some("generate") => Ok(Mode::Generate),
         Some("verify") => Ok(Mode::Verify),
         Some("fixtures") => Ok(Mode::Fixtures),
         Some(other) => Err(format!(
